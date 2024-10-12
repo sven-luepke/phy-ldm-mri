@@ -28,35 +28,25 @@ from physical_model import MRSignalModel, denormalize_log_q_map, replace_groupno
 
 def main():
     parser = argparse.ArgumentParser("Train the variational autoencoder of a latent diffusion model.")
-    parser.add_argument("--epochs", type=int, default=50, help="Number of epochs to train.")
+    parser.add_argument("--epochs", type=int, default=100, help="Number of epochs to train.")
     parser.add_argument("--batch_size", type=int, default=4, help="Batch size.")
     parser.add_argument("--train_sample_limit", type=int, help="Maximum number of training samples to use. If unspecified, the full training set is used.")
     parser.add_argument("--kl_weight", type=float, default=1e-6, help="Kullback-Leibler divergence weight.")
-    parser.add_argument("--perceptual_weight", type=float, default=1e-3, help="Weight of the perceptual loss.")
-    parser.add_argument("--adversarial_weight", type=float, default=1e-2, help="Weight of the adversarial loss.")
-    parser.add_argument("--warmup_epochs", type=int, default=1, help="Number of epoch to train without the adversarial loss.")
-    parser.add_argument("--logdir", type=str, default="physical_vae", help="Tensorboard experiment name.")
+    parser.add_argument("--perceptual_weight", type=float, default=10.0, help="Weight of the perceptual loss.")
+    parser.add_argument("--adversarial_weight", type=float, default=100.0, help="Weight of the adversarial loss.")
+    parser.add_argument("--warmup_epochs", type=int, default=10, help="Number of epoch to train without the adversarial loss.")
+    parser.add_argument("--logdir", type=str, default="phy_vae", help="Tensorboard experiment name.")
     parser.add_argument("--checkpoint", type=str, help="VAE training checkpoint.")
     parser.add_argument("--data", type=str, help="Path to the directory containing the data.", required=True)
 
-    # TODO: best parameters
-    # --adversarial_weight=100
-    # --perceptual_weight=10
-    # --warmup_epochs=10
-    # --epochs=100
-
     # hparams
     parser.add_argument("--loss", type=str, default="L2", choices=['L1', 'L2'])
-    parser.add_argument("--use_regressor", action="store_true")
-    parser.add_argument("--use_modality_dropout", action="store_true")
     parser.add_argument("--use_regularization", action="store_true", help="Use Physical Regularization.")
-    parser.add_argument("--use_exp_offset", action="store_true", help="Use the exponential offset.")
-    parser.add_argument("--adagn", action="store_true", help="Condition the encoder on acqusition parameters using adaptive group normalization.")
-    parser.add_argument("--seed", type=int, help="Random seed for reproducibility.")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility.")
 
     args = parser.parse_args()
 
-    # python experiments/physical_latent/train_vae.py --epochs=50 --data=../data/ --use_regressor --use_modality_dropout --use_regularization --use_exp_offset --adagn
+    # python experiments/physical_latent/train_vae.py --data=../data/ --use_regularization
 
     # set random seed
     if args.seed is None:
@@ -107,8 +97,7 @@ def main():
         nn.GELU(),
         nn.Linear(128, 2)
     ).to(device)
-    if args.adagn:
-        replace_groupnorm_with_adaptive_groupnorm(autoencoder.encoder)
+    replace_groupnorm_with_adaptive_groupnorm(autoencoder.encoder)
     
     pd_prior_median = 50
     t1_prior_median = 1
@@ -146,10 +135,7 @@ def main():
     perceptual_weight = args.perceptual_weight
     adversarial_weight = args.adversarial_weight # 1e-2
     generator_parameter_list = list(autoencoder.parameters())
-    if args.use_regressor:
-        generator_parameter_list += list(scanner_gain_regressor.parameters())
-    if args.adagn:
-        generator_parameter_list += list(acq_param_encoder.parameters())
+    generator_parameter_list += list(acq_param_encoder.parameters())
     optimizer_generator = torch.optim.Adam(generator_parameter_list, lr=5e-5)
     optimizer_discriminator = torch.optim.Adam(discriminator.parameters(), lr=1e-4)
 
@@ -172,12 +158,8 @@ def main():
         "checkpoint": out_checkpoint,
         "batch_size": args.batch_size,
         "loss": args.loss,
-        "use_regressor": args.use_regressor,
-        "use_modality_dropout": args.use_modality_dropout,
         "use_regularization": args.use_regularization,
-        "use_exp_offset": args.use_exp_offset,
         "seed": seed,
-        "adagn": args.adagn,
     }
 
     grad_scaler_generator = torch.cuda.amp.GradScaler()
@@ -219,19 +201,16 @@ def main():
             train_inputs = scale_transform(train_images)
             train_targets = train_images
 
-            if args.use_modality_dropout:
-                mask = train_image_mask_input.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
-            else:
-                mask = train_image_mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+            mask = train_image_mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
 
-            if args.adagn:
-                train_acq_params_norm = train_batch["acq_params_norm"].to(device).float()
-                adagn_input = acq_param_encoder(train_acq_params_norm.view(N * C, 3))
-                adagn_scale = adagn_input[:, 0]
-                adagn_shift = adagn_input[:, 1]
-                for module in autoencoder.encoder.modules():
-                    if isinstance(module, AdaptiveGroupNorm):
-                        module.assign_adaptive_paramters(scale=adagn_scale, shift=adagn_shift)
+            # inject acquisition parameters
+            train_acq_params_norm = train_batch["acq_params_norm"].to(device).float()
+            adagn_input = acq_param_encoder(train_acq_params_norm.view(N * C, 3))
+            adagn_scale = adagn_input[:, 0]
+            adagn_shift = adagn_input[:, 1]
+            for module in autoencoder.encoder.modules():
+                if isinstance(module, AdaptiveGroupNorm):
+                    module.assign_adaptive_paramters(scale=adagn_scale, shift=adagn_shift)
 
             z_mu, z_sigma = autoencoder.encode(train_inputs.view(N * C, 1, H, W))
             z_mu = z_mu.view(N, C, latent_channels, 20, 28)
@@ -252,26 +231,14 @@ def main():
 
             regularization_loss = torch.sum(train_norm_log_q_map * train_norm_log_q_map) / batch_size
 
-            if args.use_exp_offset:
-                train_log_q_map = denormalize_log_q_map(
-                    norm_log_q_map=train_norm_log_q_map,
-                    log_pd_mean=log_pd_prior_mean,
-                    log_t1_mean=log_t1_prior_mean,
-                    log_t2_mean=log_t2_prior_mean
-                )
-            else:
-                train_log_q_map = train_norm_log_q_map
+            train_log_q_map = denormalize_log_q_map(
+                norm_log_q_map=train_norm_log_q_map,
+                log_pd_mean=log_pd_prior_mean,
+                log_t1_mean=log_t1_prior_mean,
+                log_t2_mean=log_t2_prior_mean
+            )
 
-            # predict the scanner gain directly from the input images
-            # pass the input images through the shared log scanner gain regression model
-            # masked the predictions based on the available modalities
-            # and average the masked predictions
-            if args.use_regressor:
-                log_scanner_gain = (scanner_gain_regressor(train_inputs.view(N * C, 1, H, W)).view(N, C) * train_image_mask_input).sum(1) / train_image_mask_input.sum(1)
-                log_scanner_gain = log_scanner_gain.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
-            else:
-                log_scanner_gain = default_log_scanner_gain
-
+            log_scanner_gain = default_log_scanner_gain
 
             train_reconstruction = mr_signal_model(train_log_q_map, train_acq_params, train_modality_id, log_scanner_gain)
 
@@ -356,14 +323,14 @@ def main():
                         val_inputs = scale_transform(val_images)
                         val_targets = val_images
 
-                        if args.adagn:
-                            val_acq_params_norm = val_batch["acq_params_norm"].to(device).float()
-                            adagn_input = acq_param_encoder(val_acq_params_norm.view(N * C, 3))
-                            adagn_scale = adagn_input[:, 0]
-                            adagn_shift = adagn_input[:, 1]
-                            for module in autoencoder.encoder.modules():
-                                if isinstance(module, AdaptiveGroupNorm):
-                                    module.assign_adaptive_paramters(scale=adagn_scale, shift=adagn_shift)
+                        # inject acquisition parameters
+                        val_acq_params_norm = val_batch["acq_params_norm"].to(device).float()
+                        adagn_input = acq_param_encoder(val_acq_params_norm.view(N * C, 3))
+                        adagn_scale = adagn_input[:, 0]
+                        adagn_shift = adagn_input[:, 1]
+                        for module in autoencoder.encoder.modules():
+                            if isinstance(module, AdaptiveGroupNorm):
+                                module.assign_adaptive_paramters(scale=adagn_scale, shift=adagn_shift)
 
                         mask = val_image_mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
                         z_mu, z_sigma = autoencoder.encode(val_inputs.view(N * C, 1, H, W))
@@ -383,25 +350,14 @@ def main():
                         z = autoencoder.sampling(z_mu_fused, z_sigma_fused)
                         val_norm_log_q_map = autoencoder.decode(z)
 
-                        if args.use_exp_offset:
-                            val_log_q_map = denormalize_log_q_map(
-                                norm_log_q_map=val_norm_log_q_map,
-                                log_pd_mean=log_pd_prior_mean,
-                                log_t1_mean=log_t1_prior_mean,
-                                log_t2_mean=log_t2_prior_mean
-                            )
-                        else:
-                            val_log_q_map = val_norm_log_q_map
+                        val_log_q_map = denormalize_log_q_map(
+                            norm_log_q_map=val_norm_log_q_map,
+                            log_pd_mean=log_pd_prior_mean,
+                            log_t1_mean=log_t1_prior_mean,
+                            log_t2_mean=log_t2_prior_mean
+                        )
 
-                        # predict the scanner gain directly from the input images
-                        # pass the input images through the shared log scanner gain regression model
-                        # masked the predictions based on the available modalities
-                        # and average the masked predictions
-                        if args.use_regressor:
-                            log_scanner_gain = (scanner_gain_regressor(val_inputs.view(N * C, 1, H, W)).view(N, C) * val_image_mask).sum(1) / val_image_mask.sum(1)
-                            log_scanner_gain = log_scanner_gain.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
-                        else:
-                            log_scanner_gain = default_log_scanner_gain
+                        log_scanner_gain = default_log_scanner_gain
 
                         val_reconstruction = mr_signal_model(val_log_q_map, val_acq_params, val_modality_id, log_scanner_gain)
                         val_loss_sum += train_reconstruction_loss_func(val_reconstruction.float(), val_targets.float())
@@ -502,14 +458,14 @@ def main():
             val_inputs = scale_transform(val_images)
             val_targets = val_images
 
-            if args.adagn:
-                val_acq_params_norm = val_batch["acq_params_norm"].to(device).float()
-                adagn_input = acq_param_encoder(val_acq_params_norm.view(N * C, 3))
-                adagn_scale = adagn_input[:, 0]
-                adagn_shift = adagn_input[:, 1]
-                for module in autoencoder.encoder.modules():
-                    if isinstance(module, AdaptiveGroupNorm):
-                        module.assign_adaptive_paramters(scale=adagn_scale, shift=adagn_shift)
+            # inject acquisition parameters
+            val_acq_params_norm = val_batch["acq_params_norm"].to(device).float()
+            adagn_input = acq_param_encoder(val_acq_params_norm.view(N * C, 3))
+            adagn_scale = adagn_input[:, 0]
+            adagn_shift = adagn_input[:, 1]
+            for module in autoencoder.encoder.modules():
+                if isinstance(module, AdaptiveGroupNorm):
+                    module.assign_adaptive_paramters(scale=adagn_scale, shift=adagn_shift)
 
             mask = val_image_mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
             z_mu, z_sigma = autoencoder.encode(val_inputs.view(N * C, 1, H, W))
@@ -529,25 +485,14 @@ def main():
             z = autoencoder.sampling(z_mu_fused, z_sigma_fused)
             val_norm_log_q_map = autoencoder.decode(z)
 
-            if args.use_exp_offset:
-                val_log_q_map = denormalize_log_q_map(
-                    norm_log_q_map=val_norm_log_q_map,
-                    log_pd_mean=log_pd_prior_mean,
-                    log_t1_mean=log_t1_prior_mean,
-                    log_t2_mean=log_t2_prior_mean
-                )
-            else:
-                val_log_q_map = val_norm_log_q_map
+            val_log_q_map = denormalize_log_q_map(
+                norm_log_q_map=val_norm_log_q_map,
+                log_pd_mean=log_pd_prior_mean,
+                log_t1_mean=log_t1_prior_mean,
+                log_t2_mean=log_t2_prior_mean
+            )
 
-            # predict the scanner gain directly from the input images
-            # pass the input images through the shared log scanner gain regression model
-            # masked the predictions based on the available modalities
-            # and average the masked predictions
-            if args.use_regressor:
-                log_scanner_gain = (scanner_gain_regressor(val_inputs.view(N * C, 1, H, W)).view(N, C) * val_image_mask).sum(1) / val_image_mask.sum(1)
-                log_scanner_gain = log_scanner_gain.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
-            else:
-                log_scanner_gain = default_log_scanner_gain
+            log_scanner_gain = default_log_scanner_gain
 
             val_reconstruction = mr_signal_model(val_log_q_map, val_acq_params, val_modality_id, log_scanner_gain)
             val_loss_sum += train_reconstruction_loss_func(val_reconstruction.float(), val_targets.float())
