@@ -46,7 +46,7 @@ def main():
 
     args = parser.parse_args()
 
-    # python experiments/physical_latent/train_vae.py --data=../data/ --use_regularization
+    # python sourc/train_vae.py --data=../gr-multimodal/data/ --use_regularization
 
     # set random seed
     if args.seed is None:
@@ -62,7 +62,7 @@ def main():
     image_path = os.path.join(args.data, "oasis-3-mri-2d-8")
 
     # load data
-    train_session_ids, val_session_ids = create_oasis_3_mr_data_split("../json/oasis_3_mri_sessions.json")
+    train_session_ids, val_session_ids = create_oasis_3_mr_data_split("./json/oasis_3_mri_sessions.json")
     meta_df = load_oasis_3_mr_meta_df(acq_param_path)
     train_dataset, val_dataset = create_datasets(
         image_dataset_path=image_path,
