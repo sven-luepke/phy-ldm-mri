@@ -1,4 +1,4 @@
-# Physics-Informed Latent Diffusion for Multimodal Brain MRI Synthesis
+# Physics-Informed Latent Diffusion for Multimodal Brain MRI Synthesis [[Project Page](https://sven-luepke.github.io/phy-ldm-mri/), Paper]
 
 Code for the paper "Physics-Informed Latent Diffusion for Multimodal Brain MRI Synthesis"
 
