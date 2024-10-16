@@ -38,7 +38,14 @@ tensorboard --logdir=./runs/gen_phy_ldm/
 Coming soon...
 
 ### Training
+- Variational Autoencoder
+```
+python source/train_vae.py --data=./data
+```
+- Latent Diffusion UNet
+```
 Coming soon...
+```
 
 ## BibTeX
 ```
