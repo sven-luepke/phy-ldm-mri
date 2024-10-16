@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
 from utils import *
-from physical_model import denormalize_log_q_map, replace_groupnorm_with_adaptive_groupnorm
+from models import denormalize_log_q_map, replace_groupnorm_with_adaptive_groupnorm
 
 
 def main():

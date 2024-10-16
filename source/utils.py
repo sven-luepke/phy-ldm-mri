@@ -12,9 +12,6 @@ from monai.transforms import (
     Compose,
     LoadImaged,
     SqueezeDimd,
-    EnsureChannelFirstd,
-    ScaleIntensityRangePercentilesd,
-    ScaleIntensityd,
     ToTensord,
     MapTransform,
     Randomizable
@@ -240,7 +237,6 @@ def create_datasets(
         ToTensord(keys=["acq_params", "acq_params_norm", "modality_id", "image_mask"]),
         RandomMask(keys="image_mask", prob=0.1),
         ToTensord(keys=["image_mask_input"]),
-        #ScaleIntensityRangePercentilesd(keys="images", lower=0, upper=99.5, b_min=0, b_max=1, clip=False, channel_wise=False)
     ])
 
     #train_data_list = train_data_list[2:3]

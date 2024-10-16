@@ -5,8 +5,6 @@ import itertools
 
 import torch
 import torch.nn as nn
-from torch.utils.tensorboard import SummaryWriter
-from torch.cuda.amp import GradScaler, autocast
 from torcheval.metrics import PeakSignalNoiseRatio 
 
 from monai.data import DataLoader
@@ -14,8 +12,8 @@ from monai.transforms import ScaleIntensityRangePercentiles, ScaleIntensity
 from monai.networks.nets import Regressor
 
 from generative.losses import PatchAdversarialLoss, PerceptualLoss
-from generative.networks.nets import AutoencoderKL,  PatchDiscriminator
-from generative.metrics import FIDMetric, MultiScaleSSIMMetric
+from generative.networks.nets import AutoencoderKL, PatchDiscriminator
+from generative.metrics import MultiScaleSSIMMetric
 
 import numpy as np
 from tqdm import tqdm
@@ -23,7 +21,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
 from utils import *
-from physical_model import MRSignalModel, denormalize_log_q_map, replace_groupnorm_with_adaptive_groupnorm, AdaptiveGroupNorm
+from models import MRSignalModel, denormalize_log_q_map, replace_groupnorm_with_adaptive_groupnorm, AdaptiveGroupNorm
 
 
 def main():
@@ -41,12 +39,11 @@ def main():
 
     # hparams
     parser.add_argument("--loss", type=str, default="L2", choices=['L1', 'L2'])
-    parser.add_argument("--use_regularization", action="store_true", help="Use Physical Regularization.")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility.")
 
     args = parser.parse_args()
 
-    # python source/train_vae.py --data=../gr-multimodal/data/ --use_regularization
+    # python source/train_vae.py --data=../gr-multimodal/data/
 
     # set random seed
     if args.seed is None:
@@ -60,9 +57,10 @@ def main():
 
     acq_param_path = os.path.join(args.data, "oasis-3-acq-params.csv")
     image_path = os.path.join(args.data, "oasis-3-mri-2d-8")
+    mri_session_path = os.path.join(args.data, "oasis_3_mri_sessions.json")
 
     # load data
-    train_session_ids, val_session_ids = create_oasis_3_mr_data_split("./json/oasis_3_mri_sessions.json")
+    train_session_ids, val_session_ids = create_oasis_3_mr_data_split(mri_session_path)
     meta_df = load_oasis_3_mr_meta_df(acq_param_path)
     train_dataset, val_dataset = create_datasets(
         image_dataset_path=image_path,
@@ -158,7 +156,6 @@ def main():
         "checkpoint": out_checkpoint,
         "batch_size": args.batch_size,
         "loss": args.loss,
-        "use_regularization": args.use_regularization,
         "seed": seed,
     }
 
@@ -255,8 +252,8 @@ def main():
             loss_generator = reconstruction_loss
             loss_generator += kl_weight * kl_loss
 
-            if args.use_regularization:
-                loss_generator += regularization_loss * 0.0005
+            # L2 regularization of the shifted tissue property values
+            loss_generator += regularization_loss * 0.0005
 
             perceptual_loss = perceptual_loss * perceptual_weight
             loss_generator += perceptual_loss
