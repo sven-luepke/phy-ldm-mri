@@ -43,8 +43,6 @@ def main():
 
     args = parser.parse_args()
 
-    # python source/train_vae.py --data=../gr-multimodal/data/
-
     # set random seed
     if args.seed is None:
         seed = random.randint(0, 2**32 - 1)
@@ -56,7 +54,7 @@ def main():
     print(args)
 
     acq_param_path = os.path.join(args.data, "oasis-3-acq-params.csv")
-    image_path = os.path.join(args.data, "oasis-3-mri-2d-8")
+    image_path = os.path.join(args.data, "oasis-3-mri-2d")
     mri_session_path = os.path.join(args.data, "oasis_3_mri_sessions.json")
 
     # load data

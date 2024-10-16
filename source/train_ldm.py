@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.cuda.amp import GradScaler, autocast
 from monai.data import DataLoader
-from monai.transforms import ScaleIntensity, ScaleIntensityRangePercentiles
+from monai.transforms import ScaleIntensityRangePercentiles
 
 from generative.inferers import LatentDiffusionInferer
 from generative.networks.nets import DiffusionModelUNet, AutoencoderKL
@@ -51,10 +51,11 @@ def main():
     torch.manual_seed(seed)
 
     acq_param_path = os.path.join(args.data, "oasis-3-acq-params.csv")
-    image_path = os.path.join(args.data, "oasis-3-mri-2d-8")
+    image_path = os.path.join(args.data, "oasis-3-mri-2d")
+    mri_session_path = os.path.join(args.data, "oasis_3_mri_sessions.json")
 
     # load data
-    train_session_ids, _ = create_oasis_3_mr_data_split("../json/oasis_3_mri_sessions.json")
+    train_session_ids, _ = create_oasis_3_mr_data_split(mri_session_path)
     meta_df = load_oasis_3_mr_meta_df(acq_param_path)
     train_dataset, _ = create_datasets(
         image_dataset_path=image_path,
@@ -164,10 +165,9 @@ def main():
     out_checkpoint = os.path.join(checkpoint_dir, f"phy_ldm_{timestamp}.pt")
 
 
-    tb_writer = create_tensorboard_writer(experiment_name=args.logdir, log_dir_root="../runs/")
+    tb_writer = create_tensorboard_writer(experiment_name=args.logdir, log_dir_root="./runs/")
     epochs = args.epochs
     grad_scaler = GradScaler()
-    tb_image_scaler = ScaleIntensity(channel_wise=True)
 
     for epoch in range(epochs):
         unet.train()
