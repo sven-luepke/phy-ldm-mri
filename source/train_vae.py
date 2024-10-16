@@ -46,7 +46,7 @@ def main():
 
     args = parser.parse_args()
 
-    # python sourc/train_vae.py --data=../gr-multimodal/data/ --use_regularization
+    # python source/train_vae.py --data=../gr-multimodal/data/ --use_regularization
 
     # set random seed
     if args.seed is None:
@@ -128,7 +128,7 @@ def main():
     autoencoder.train()
     scanner_gain_regressor.train()
 
-    tb_writer = create_tensorboard_writer(experiment_name=args.logdir, log_dir_root="../runs/")
+    tb_writer = create_tensorboard_writer(experiment_name=args.logdir, log_dir_root="./runs/")
 
     epochs = args.epochs
     kl_weight = args.kl_weight
