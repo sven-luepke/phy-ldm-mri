@@ -54,7 +54,7 @@ python source/train_vae.py --data=./data
 ```
 2. Latent Diffusion UNet
 ```
-python source/train_ldm.py --data=./data
+python source/train_ldm.py --data=./data --vae_checkpoint=<vae_checkpoint_file.pth>
 ```
 TODO:
 - add Tensorboard commands
