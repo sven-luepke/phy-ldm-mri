@@ -40,11 +40,12 @@ tensorboard --logdir=./runs/gen_phy_ldm/
 ./download_oasis_scans.sh <input_file.csv> <directory_name> <nitrc_ir_username> T1w,T2w,flair
 ```
 - See https://github.com/NrgXnat/oasis-scripts/tree/master for details
+
 TODO:
-- add input_file.csv
+- add input_file.csv and move csv files to repo
 - script to copy files from acq_param.csv into flat directory structure
 - preprocess with unires
-- crop scans
+- crop scans script
 - extract 2D slices
 
 ### Training
