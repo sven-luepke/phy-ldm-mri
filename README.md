@@ -35,7 +35,17 @@ tensorboard --logdir=./runs/gen_phy_ldm/
 ```
 
 ### Dataset Preparation
-Coming soon...
+1. Download OASIS-3 MR images
+```
+./download_oasis_scans.sh <input_file.csv> <directory_name> <nitrc_ir_username> T1w,T2w,flair
+```
+- See https://github.com/NrgXnat/oasis-scripts/tree/master for details
+TODO:
+- add input_file.csv
+- script to copy files from acq_param.csv into flat directory structure
+- preprocess with unires
+- crop scans
+- extract 2D slices
 
 ### Training
 1. Variational Autoencoder
@@ -44,8 +54,10 @@ python source/train_vae.py --data=./data
 ```
 2. Latent Diffusion UNet
 ```
-Coming soon...
+python source/train_ldm.py --data=./data
 ```
+TODO:
+- add Tensorboard commands
 
 ## BibTeX
 ```

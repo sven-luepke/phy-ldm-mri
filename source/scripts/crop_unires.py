@@ -29,7 +29,7 @@ def process_session(session_info):
 
 
 def main():
-    parser = argparse.ArgumentParser("Crop UniRes output from 196x256x196 to 160x224x160.")
+    parser = argparse.ArgumentParser("Crop UniRes output images from 196x256x196 to 160x224x160.")
     parser.add_argument("--input", type=str, help="Input dataset path")
     parser.add_argument("--output", type=str, help="Output dataset path")
 

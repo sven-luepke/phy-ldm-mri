@@ -27,21 +27,15 @@ from models import denormalize_log_q_map, PhysicalVAE, replace_groupnorm_with_ad
 
 def main():
     parser = argparse.ArgumentParser("Train the variational autoencoder of a latent diffusion model.")
-    parser.add_argument("--epochs", type=int, default=100, help="Number of epochs to train.")
+    parser.add_argument("--epochs", type=int, default=200, help="Number of epochs to train.")
     parser.add_argument("--batch_size", type=int, default=16, help="Batch size.")
     parser.add_argument("--train_sample_limit", type=int, help="Maximum number of training samples to use. If unspecified, the full training set is used.")
     parser.add_argument("--vae_checkpoint", type=str, help="VAE training checkpoint")
-    parser.add_argument("--logdir", type=str, default="physical_ldm_2", help="Tensorboard experiment name.")
+    parser.add_argument("--logdir", type=str, default="phy_ldm", help="Tensorboard experiment name.")
     parser.add_argument("--data", type=str, help="Path to the directory containing the data.", required=True)
-
-    # hyperparameters
-    parser.add_argument("--adagn", action="store_true", help="Use adaptive group normalization to condition the encoder.")
-    parser.add_argument("--use_exp_offset", action="store_true", help="Use the exponential offset.")
-    parser.add_argument("--seed", type=int, help="Random seed for reproducibility.")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility.")
 
     args = parser.parse_args()
-
-    # python experiments/physical_latent/train_ldm.py --epochs=1 --data=../data/ --logdir=phy_ldm_v2_test --vae_checkpoint=../checkpoints/phy_vae_20240625_233031.pt --adagn --use_exp_offset
 
     # set random seed
     if args.seed is None:
@@ -83,8 +77,7 @@ def main():
         num_res_blocks=3,
         attention_levels=(False, False, False, False),
     )
-    if args.adagn:
-        replace_groupnorm_with_adaptive_groupnorm(autoencoder.encoder)
+    replace_groupnorm_with_adaptive_groupnorm(autoencoder.encoder)
 
     vae_checkpoint = torch.load(args.vae_checkpoint)
     autoencoder.load_state_dict(vae_checkpoint["autoencoder_model_state_dict"])
@@ -110,14 +103,13 @@ def main():
                 train_images = train_batch["images"].to(device)
                 N, C, _, _ = train_images.shape
 
-                if args.adagn:
-                    train_acq_params_norm = train_batch["acq_params_norm"].to(device).float()
-                    adagn_input = acq_param_encoder(train_acq_params_norm.view(N * C, 3))
-                    adagn_scale = adagn_input[:, 0]
-                    adagn_shift = adagn_input[:, 1]
-                    for module in physical_autoencoder.autoencoder.encoder.modules():
-                        if isinstance(module, AdaptiveGroupNorm):
-                            module.assign_adaptive_paramters(scale=adagn_scale, shift=adagn_shift)
+                train_acq_params_norm = train_batch["acq_params_norm"].to(device).float()
+                adagn_input = acq_param_encoder(train_acq_params_norm.view(N * C, 3))
+                adagn_scale = adagn_input[:, 0]
+                adagn_shift = adagn_input[:, 1]
+                for module in physical_autoencoder.autoencoder.encoder.modules():
+                    if isinstance(module, AdaptiveGroupNorm):
+                        module.assign_adaptive_paramters(scale=adagn_scale, shift=adagn_shift)
             
                 train_inputs = scale_transform(train_images)
                 z = physical_autoencoder.encode_stage_2_inputs(train_inputs)
@@ -182,14 +174,13 @@ def main():
 
             with autocast(enabled=True):
 
-                if args.adagn:
-                    train_acq_params_norm = train_batch["acq_params_norm"].to(device).float()
-                    adagn_input = acq_param_encoder(train_acq_params_norm.view(N * C, 3))
-                    adagn_scale = adagn_input[:, 0]
-                    adagn_shift = adagn_input[:, 1]
-                    for module in physical_autoencoder.autoencoder.encoder.modules():
-                        if isinstance(module, AdaptiveGroupNorm):
-                            module.assign_adaptive_paramters(scale=adagn_scale, shift=adagn_shift)
+                train_acq_params_norm = train_batch["acq_params_norm"].to(device).float()
+                adagn_input = acq_param_encoder(train_acq_params_norm.view(N * C, 3))
+                adagn_scale = adagn_input[:, 0]
+                adagn_shift = adagn_input[:, 1]
+                for module in physical_autoencoder.autoencoder.encoder.modules():
+                    if isinstance(module, AdaptiveGroupNorm):
+                        module.assign_adaptive_paramters(scale=adagn_scale, shift=adagn_shift)
 
                 noise = torch.randn((train_images.shape[0], latent_channels, 20, 28), device=device)
                 timesteps = torch.randint(0, inferer.scheduler.num_train_timesteps, (train_images.shape[0],), device=device).long()
@@ -215,15 +206,12 @@ def main():
                     input_noise=z, diffusion_model=unet, autoencoder_model=physical_autoencoder
                 )
 
-                if args.use_exp_offset:
-                    gen_log_q_map = denormalize_log_q_map(
-                        norm_log_q_map=gen_norm_log_q_map,
-                        log_pd_mean=log_pd_prior_mean,
-                        log_t1_mean=log_t1_prior_mean,
-                        log_t2_mean=log_t2_prior_mean
-                    )
-                else:
-                    gen_log_q_map = gen_norm_log_q_map
+                gen_log_q_map = denormalize_log_q_map(
+                    norm_log_q_map=gen_norm_log_q_map,
+                    log_pd_mean=log_pd_prior_mean,
+                    log_t1_mean=log_t1_prior_mean,
+                    log_t2_mean=log_t2_prior_mean
+                )
 
 
             q_map = torch.exp(gen_log_q_map[0]).cpu().numpy()

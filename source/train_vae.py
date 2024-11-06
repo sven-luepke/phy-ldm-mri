@@ -36,8 +36,6 @@ def main():
     parser.add_argument("--logdir", type=str, default="phy_vae", help="Tensorboard experiment name.")
     parser.add_argument("--checkpoint", type=str, help="VAE training checkpoint.")
     parser.add_argument("--data", type=str, help="Path to the directory containing the data.", required=True)
-
-    # hparams
     parser.add_argument("--loss", type=str, default="L2", choices=['L1', 'L2'])
     parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility.")
 
@@ -49,9 +47,6 @@ def main():
     else:
         seed = args.seed
     torch.manual_seed(seed)
-
-    print(f"Starting VAE training with seed {seed}:")
-    print(args)
 
     acq_param_path = os.path.join(args.data, "oasis-3-acq-params.csv")
     image_path = os.path.join(args.data, "oasis-3-mri-2d")

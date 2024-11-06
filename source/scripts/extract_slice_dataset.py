@@ -14,16 +14,6 @@ def process_session(session_info):
     for file in os.listdir(session_path):
         if not file.endswith(file_formats) or not file.startswith("ur_"):
             continue
-
-        # file_name_parts = file.split("_")[3:]
-        # file_name_parts = [x for x in file_name_parts if not x.startswith("run")]
-
-        # modality_name = "_".join(file_name_parts).split(".")[0]
-        
-        # if modality_name not in modalities:
-        #     continue
-
-        # print(file)
         
         filepath = os.path.join(session_path, file)
         mri_image = nib.load(filename=filepath)
