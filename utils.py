@@ -170,10 +170,6 @@ def create_datasets(
 
             data_dict["images"].append(os.path.join(session_path, image_file))
 
-            # import nibabel as nib
-            # d = nib.load(os.path.join(session_path, image_file)).get_fdata()
-            # print(d.shape)
-
             # acquisition parameters
             acq_params = [0] * 3
             acq_params[ECHO_TIME_INDEX] = scan_meta_data["EchoTime"].iloc[0]
@@ -239,8 +235,6 @@ def create_datasets(
         ToTensord(keys=["image_mask_input"]),
     ])
 
-    #train_data_list = train_data_list[2:3]
-
     random.seed(42)
     random.shuffle(train_data_list)
     random.shuffle(val_data_list)
@@ -255,10 +249,6 @@ def oasis_multimodal_collate_fn(data):
     """
     Pad data for missing modalities with zeros.
     """
-
-    #max_modality_count = 0
-    #for i in range(len(data)):
-    #    max_modality_count = max(data[i]["images"].shape[0], max_modality_count)
     max_modality_count = 3
 
     batch = dict()

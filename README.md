@@ -31,7 +31,7 @@ tensorboard --logdir=./runs/gen_phy_ldm/
 ```
 
 ## Dataset
-1. Download the `T1w`, `T2w`, and `FLAIR` scans from the [OASIS-3 dataset](https://sites.wustl.edu/oasisbrains/home/oasis-3/).
+1. Download the `T1w`, `T2w`, and `FLAIR` MRI scans from the [OASIS-3 dataset](https://sites.wustl.edu/oasisbrains/home/oasis-3/).
 
 TODO:
 - add input_file.csv and move csv files to repo

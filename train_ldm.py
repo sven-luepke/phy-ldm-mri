@@ -152,7 +152,7 @@ def main():
 
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    checkpoint_dir = "../checkpoints/"
+    checkpoint_dir = "./checkpoints/"
     os.makedirs(checkpoint_dir, exist_ok=True)
     out_checkpoint = os.path.join(checkpoint_dir, f"phy_ldm_{timestamp}.pt")
 

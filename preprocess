@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python preprocessing/filter_scans.py --acq_params_csv=./data/oasis-3-acq-params.csv --src_scans_path=./data/oasis-3-raw/ --dst_scans_path=./data/oasis-3-raw-filtered

@@ -111,7 +111,7 @@ def main():
     discriminator = PatchDiscriminator(spatial_dims=2, num_layers_d=3, num_channels=64, in_channels=1, out_channels=1).to(device)
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    checkpoint_dir = "../checkpoints/"
+    checkpoint_dir = "./checkpoints/"
     os.makedirs(checkpoint_dir, exist_ok=True)
     out_checkpoint = os.path.join(checkpoint_dir, f"phy_vae_{timestamp}.pt")
 
@@ -124,7 +124,7 @@ def main():
     epochs = args.epochs
     kl_weight = args.kl_weight
     perceptual_weight = args.perceptual_weight
-    adversarial_weight = args.adversarial_weight # 1e-2
+    adversarial_weight = args.adversarial_weight
     generator_parameter_list = list(autoencoder.parameters())
     generator_parameter_list += list(acq_param_encoder.parameters())
     optimizer_generator = torch.optim.Adam(generator_parameter_list, lr=5e-5)
