@@ -5,7 +5,7 @@ import itertools
 
 import torch
 import torch.nn as nn
-from torcheval.metrics import PeakSignalNoiseRatio 
+from torcheval.metrics import PeakSignalNoiseRatio
 
 from monai.data import DataLoader
 from monai.transforms import ScaleIntensityRangePercentiles, ScaleIntensity

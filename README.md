@@ -33,14 +33,10 @@ tensorboard --logdir=./runs/gen_phy_ldm/
 
 ## Dataset
 1. Download the `T1w`, `T2w`, and `FLAIR` MRI scans from the [OASIS-3 dataset](https://sites.wustl.edu/oasisbrains/home/oasis-3/).
-
-TODO:
-- add input_file.csv and move csv files to repo
-
-- script to copy files from acq_param.csv into flat directory structure
-- preprocess with unires
-- crop scans script
-- extract 2D slices
+2. Preprocess the dataset:
+```
+./preprocess <oasis_3_directory>
+```
 
 ### Training
 1. Variational Autoencoder
