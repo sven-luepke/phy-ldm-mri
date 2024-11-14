@@ -15,15 +15,15 @@ pip install -r requirements.txt
 To generate images shown in the paper, download the pretrained models [here](https://drive.google.com/drive/folders/1MmBI_DKFBgfpPQJgUtjH4Y2qVGHu4TMR?usp=drive_link), place them in the `./checkpoints` directory, and run the following commands:
 
 ```
-python ./source/generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.003 --tr=0.1 --ti=1.0 --model=mprage
-python ./source/generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.003 --tr=2.4 --ti=0.5 --model=mprage
-python ./source/generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.003 --tr=2.4 --ti=0.25 --model=mprage
-python ./source/generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.8 --tr=3.2 --model=se
-python ./source/generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.2 --tr=3.2 --model=se
-python ./source/generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.45 --tr=1.0 --model=se
-python ./source/generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.45 --tr=9.0 --ti=2.5 --model=flair
-python ./source/generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.091 --tr=9.0 --ti=5.0 --model=flair
-python ./source/generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.5 --tr=9.0 --ti=4.0 --model=flair
+python generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.003 --tr=0.1 --ti=1.0 --model=mprage
+python generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.003 --tr=2.4 --ti=0.5 --model=mprage
+python generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.003 --tr=2.4 --ti=0.25 --model=mprage
+python generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.8 --tr=3.2 --model=se
+python generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.2 --tr=3.2 --model=se
+python generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.45 --tr=1.0 --model=se
+python generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.45 --tr=9.0 --ti=2.5 --model=flair
+python generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.091 --tr=9.0 --ti=5.0 --model=flair
+python generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.5 --tr=9.0 --ti=4.0 --model=flair
 ```
 Once the images have been generated, they can be viewed in tensorboard:
 ```
@@ -44,11 +44,11 @@ TODO:
 ### Training
 1. Variational Autoencoder
 ```
-python source/train_vae.py --data=./data
+python train_vae.py --data=./data
 ```
 2. Latent Diffusion UNet
 ```
-python source/train_ldm.py --data=./data --vae_checkpoint=<vae_checkpoint_file.pth>
+python train_ldm.py --data=./data --vae_checkpoint=<vae_checkpoint_file.pth>
 ```
 
 ## BibTeX
