@@ -6,3 +6,4 @@ if [ "$#" -ne 1 ]; then
 fi
 
 python3 preprocessing/filter_scans.py --acq_params_csv=./data/oasis-3-acq-params.csv --src_scans_path=$1 --dst_scans_path=./data/oasis-3-raw-filtered
+python3 preprocessing/run_unires.py --data=./data/oasis-3-raw-filtered
