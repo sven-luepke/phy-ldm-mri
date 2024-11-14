@@ -38,7 +38,7 @@ tensorboard --logdir=./runs/gen_phy_ldm/
 ./preprocess <oasis_3_directory>
 ```
 
-### Training
+## Training
 1. Variational Autoencoder
 ```
 python train_vae.py --data=./data
