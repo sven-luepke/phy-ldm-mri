@@ -12,7 +12,7 @@ pip install -r requirements.txt
 ```
 
 ## Generate Images
-To generate images shown in the paper, download the pretrained models [here](https://drive.google.com/drive/folders/1MmBI_DKFBgfpPQJgUtjH4Y2qVGHu4TMR?usp=drive_link), place them in the `./checkpoints` directory, and run the following commands:
+To generate the images shown in the paper, download the pretrained models [here](https://drive.google.com/drive/folders/1MmBI_DKFBgfpPQJgUtjH4Y2qVGHu4TMR?usp=drive_link), place them in the `./checkpoints` directory, and run the following commands:
 
 ```
 python generate.py --vae_checkpoint=./checkpoints/phy_vae.pt --unet_checkpoint=./checkpoints/phy_ldm.pt --seed=7 --te=0.003 --tr=0.1 --ti=1.0 --model=mprage
