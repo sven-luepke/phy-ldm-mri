@@ -18,7 +18,6 @@ def main():
     dst_scans_path = args.dst_scans_path
 
     scan_ids = set(pd.read_csv(args.acq_params_csv)["ScanID"].to_list())
-    print(scan_ids)
 
     os.makedirs(dst_scans_path, exist_ok=True)
     for experiment_dir in tqdm(os.listdir(src_scans_path)):

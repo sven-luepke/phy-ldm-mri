@@ -1,3 +1,8 @@
 #!/bin/bash
 
-python preprocessing/filter_scans.py --acq_params_csv=./data/oasis-3-acq-params.csv --src_scans_path=./data/oasis-3-raw/ --dst_scans_path=./data/oasis-3-raw-filtered
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <oasis_3_data_path>"
+    exit 1
+fi
+
+python preprocessing/filter_scans.py --acq_params_csv=./data/oasis-3-acq-params.csv --src_scans_path=$1 --dst_scans_path=./data/oasis-3-raw-filtered

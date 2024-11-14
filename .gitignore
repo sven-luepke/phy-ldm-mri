@@ -159,10 +159,14 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-**/data/*
+data/*
+!data/oasis-3-acq-params.csv
+!data/oasis_3_mri_sessions.json
+
 **/runs/*
 **/tb_logs/*
 **/checkpoints/*
 **/cache/*
 /images
 /csv
+
