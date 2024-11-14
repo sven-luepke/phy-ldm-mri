@@ -6,6 +6,7 @@ Code for the paper "Physics-Informed Latent Diffusion for Multimodal Brain MRI S
 ### Prerequisites
 - Python 3
 - Pytorch 2.1
+- [UniRes](https://github.com/brudfors/UniRes)
 ### Install Dependencies
 ```
 pip install -r requirements.txt

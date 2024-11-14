@@ -7,7 +7,7 @@ from multiprocessing import Pool
 
 
 def process_session(session_info):
-    input_3d_data_path, session_directory, output_2d_data_path, slice_count, modalities = session_info
+    input_3d_data_path, session_directory, output_2d_data_path, slice_count = session_info
     session_path = os.path.join(input_3d_data_path, session_directory)
     file_formats = (".nii.gz", ".nii")
 
@@ -40,16 +40,14 @@ def main():
     parser.add_argument("--input", type=str, help="Input 3D dataset path")
     parser.add_argument("--output", type=str, help="Output 2D slice dataset path")
     parser.add_argument("--slices", default=8, type=int, help="Number of axial slices to extract")
-    parser.add_argument("--modalities", type=str, help="Modalities to include. By default all modalities are used.")
 
     args = parser.parse_args()
 
-    modalities = args.modalities.split(",") if args.modalities is not None else None
     input_3d_data_path = args.input
     output_2d_data_path = args.output
     slice_count = args.slices
 
-    sessions = [(input_3d_data_path, session_directory, output_2d_data_path, slice_count, modalities) 
+    sessions = [(input_3d_data_path, session_directory, output_2d_data_path, slice_count) 
                 for session_directory in os.listdir(input_3d_data_path)]
 
     with Pool() as pool:
