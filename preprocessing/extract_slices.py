@@ -36,7 +36,7 @@ def process_session(session_info):
 
 
 def main():
-    parser = argparse.ArgumentParser("Convert samples from a 3D dataset into multiple samples consisting of 2D slices.")
+    parser = argparse.ArgumentParser("Extract 2D slice data from 3D volume data.")
     parser.add_argument("--input", type=str, help="Input 3D dataset path")
     parser.add_argument("--output", type=str, help="Output 2D slice dataset path")
     parser.add_argument("--slices", default=8, type=int, help="Number of axial slices to extract")
